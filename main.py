@@ -1,27 +1,33 @@
 import cv2
 from ultralytics import YOLO
 import numpy as np
-
+MAX_DISPLAY_WIDTH = 1280
+MAX_DISPLAY_HEIGHT = 720
 # Aqui ele vai ler o .pt que o modelo treinou
-model = YOLO('yolov8n.pt')
+model = YOLO('yolov8m.pt')
 
 # O "0" geralmente puxa a cam
-cap = cv2.VideoCapture(0)
+
+cap = cv2.VideoCapture("C:\\Users\\bruno\\MapaDeCalor\\YTDown_YouTube_Panoramic-video-of-the-football-pitch_Media_HBTFZwMdcCw_001_1080p.mp4")
 
 if not cap.isOpened():
     print("Erro: Não foi possível abrir a câmera.")
     exit()
+
+cv2.namedWindow("Monitoramento de Jogadores (PoC)", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Radar 2D (Vista de Cima)", cv2.WINDOW_NORMAL)
+
 #  Configuracao da Homografia (Calibração do Campo)
 # 1. Os 4 cantos da área na sua câmera (em pixels)
 pontos_camera = np.float32([
-    [155, 224], # 1. Topo-Esquerdo
-    [391, 224], # 2. Topo-Direito
-    [370, 328], # 3. Baixo-Direito
-    [62, 328]   # 4. Baixo-Esquerdo
+    [580, 97], # 1. Topo-Esquerdo
+    [1344, 97], # 2. Topo-Direito
+    [1896, 415], # 3. Baixo-Direito
+    [30, 415]   # 4. Baixo-Esquerdo
 ])
 
 # 2. O tamanho do nosso "Radar 2D" visto de cima
-largura_mapa, altura_mapa = 400, 400
+largura_mapa, altura_mapa = 600, 400
 pontos_plano_2d = np.float32([
     [0, 0],                         # 1. Topo-Esquerdo
     [largura_mapa, 0],              # 2. Topo-Direito
@@ -77,7 +83,12 @@ while True:
             cv2.circle(mapa_2d, (x_2d, y_2d), 10, (0, 255, 255), -1)
     # -------------------------------------------------------------------
 
-    cv2.imshow("Monitoramento de Jogadores (PoC)", frame_anotado)
+    height, width = frame_anotado.shape[:2]
+    scale = min(MAX_DISPLAY_WIDTH / width, MAX_DISPLAY_HEIGHT / height, 1.0)
+    display_size = (int(width * scale), int(height * scale))
+    frame_exibicao = cv2.resize(frame_anotado, display_size, interpolation=cv2.INTER_AREA)
+
+    cv2.imshow("Monitoramento de Jogadores (PoC)", frame_exibicao)
     cv2.imshow("Radar 2D (Vista de Cima)", mapa_2d)
 
     # Pressione "q" para encerrar
